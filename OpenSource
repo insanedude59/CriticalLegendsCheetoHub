@@ -5,7 +5,19 @@ local Window = lib:AddWindow('Cheeto Hub | Critical Legends')
 
 local tab1 = Window:AddTab("Main")
 
-local rootpart = game.Players.LocalPlayer.Character.HumanoidRootPart
+local tab2 = Window:AddTab("Teleports")
+
+local tab3 = Window:AddTab("Combat Style Changer")
+
+local styles = {}
+for i,v in pairs(game:GetService("ReplicatedStorage")["CS_Keys"]["CS_Storage_Key"]:GetChildren()) do
+    table.insert(styles,v.Name)
+end
+
+
+
+
+local rootpart = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
 
 
 local region = {}
@@ -13,8 +25,12 @@ for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
     table.insert(region,v)
 end
 
-
-
+local teleports = {}
+for i,v in pairs(workspace.WorldMap:GetChildren()) do
+    if v:IsA("Model") and not table.find(teleports, v.Name) and v:GetModelCFrame() then 
+        table.insert(teleports, v.Name)
+    end
+end
 
 
 tab1:AddSwitch("Auto Chests",function(value)
@@ -29,11 +45,11 @@ tab1:AddSwitch("Auto Chests",function(value)
     end
 end)
 
-tab1:AddSwitch("Auto Tp to Damage Sword Thing",function(value)
+tab1:AddSwitch("Auto Tp to Damage Orb",function(value)
     tog2 = value
     while tog2 do wait()
     for i,v in pairs(game:GetService("Workspace").CombatFolder[game.Players.LocalPlayer.Name]:GetChildren()) do
-        if v.Name == "SwordOrb" then
+        if string.match(tostring(v),"Orb") then
             rootpart.CFrame = CFrame.new(v.HitBox.Position)
             end
         end
@@ -85,11 +101,42 @@ tab1:AddSwitch("Autofarm Selected Region",function(value)
     spawn(function()
         if workspace:FindFirstChild("CombatFolder") and autofarm then
                 for i,v in pairs(game:GetService("Workspace").CombatFolder[game.Players.LocalPlayer.Name]:GetChildren()) do
-        if v.Name == "SwordOrb" then
+        if string.match(tostring(v),"Orb") then
             rootpart.CFrame = CFrame.new(v.HitBox.Position)
                     end
                 end
             end
         end)
+    end
+end)
+local thingy = tab2:AddDropdown("Select Teleport",function(selected)
+    ttt = selected
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = workspace.WorldMap[ttt]:GetModelCFrame()
+    end)
+for i = 1,#region do
+    thingy:Add(region[i])
+    end
+
+local thingy2 = tab3:AddDropdown("Select Style",function(selected)
+    selectedstyle = selected
+end)
+
+for i = 1,#styles do
+    thingy2:Add(tostring(game.ReplicatedStorage["CS_Keys"]["CS_Storage_Key"][styles[i]].Value))
+end
+tab3:AddButton("Change Style",function()
+    for i,v in pairs(game:GetService("ReplicatedStorage")["CS_Keys"]["CS_Storage_Key"]:GetChildren()) do
+        if v.Value == selectedstyle then
+    local ohString1 = "CombatStyle"
+local ohTable2 = {
+	["Base"] = {
+		["Position"] = rootpart.Position
+	},
+	["CombatStyle"] = {
+		["Value"] = styles[i]
+	}
+}
+game:GetService("ReplicatedStorage").Remotes.StatsChange:FireServer(ohString1,ohTable2)
+        end
     end
 end)
